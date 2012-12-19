@@ -7,9 +7,9 @@ import socket
 import sys
 
 
-def to_path(metrics, prefix=""):
-    if isinstance(metrics, dict):
-        for k, v in metrics.items():
+def to_path(data, prefix=""):
+    if isinstance(data, dict):
+        for k, v in data.items():
             if prefix:
                 real_prefix = ".".join((prefix, k))
             else:
@@ -17,10 +17,10 @@ def to_path(metrics, prefix=""):
 
             for line in to_path(v, real_prefix):
                 yield line
-    elif isinstance(metrics, list):
-        yield (prefix, ",".join(metrics))
+    elif isinstance(data, list):
+        yield (prefix, ",".join(data))
     else:
-        yield (prefix, str(metrics))
+        yield (prefix, str(data))
 
 def matched(filter, data):
     fk, kv = filter.split('=', 1)
