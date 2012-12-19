@@ -3,9 +3,19 @@ logstash-tail
 
 Tail logstash tcp outputs
 
+    usage: logstash-tail.py [-h] [-H HOST] [-p PORT] [--filter FILTER]
+
+    Tail logstash tcp output
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -H HOST, --host HOST  Logstash host [default: localhost]
+      -p PORT, --port PORT  Logstash TCP output port
+      --filter FILTER       Define some filters (multiple accepted; ORed)
+
 An example:
 
-    (scott@lalala:prog)% ./logstash-tail -p 9090 --filter @fields.program=sensu-client
+    (scott@lalala:~)% ./logstash-tail.py -p 9090 --filter @fields.program=sensu-client
     2012-12-19T20:43:16.661Z vagrant: {"timestamp":"2012-12-19T20:43:16.242832+0000","message":"config file applied changes","config_file":"/etc/sensu/conf.d/checks/check_root_df.json","changes":{"checks":{"check_root_df":[null,{"command":"/etc/sensu/plugins/check_graphite.py -U http://127.0.0.1 -t 'tl.org.housepub.int.vagrant.base.df.root.blocks.percent_used' --from=-5min -W 92.0 -C 95.0","interval":60,"standalone":true,"graph":"http://localhost/render?target=lineWidth(color(tl.org.housepub.int.vagrant.base.df.root.blocks.percent_used,'green'),2)&target=threshold(92,'warn','yellow')&target=threshold(95,'crit','red')&yMin=0&yMax=100&width=1000&height=500"}]}},"level":"warn"}
     2012-12-19T20:43:16.676Z vagrant: {"timestamp":"2012-12-19T20:43:16.243040+0000","message":"config file applied changes","config_file":"/etc/sensu/conf.d/checks/check_ssh.json","changes":{"checks":{"check_ssh":[null,{"command":"/usr/lib/nagios/plugins/check_ssh vagrant.int.housepub.org","interval":60,"standalone":true}]}},"level":"warn"}
     2012-12-19T20:43:16.677Z vagrant: {"timestamp":"2012-12-19T20:43:16.243196+0000","message":"config file applied changes","config_file":"/etc/sensu/conf.d/checks/check_memory.json","changes":{"checks":{"check_memory":[null,{"command":"/etc/sensu/plugins/check_graphite.py -U http://localhost -t 'asPercent(tl.org.housepub.int.vagrant.base.meminfo.memused,tl.org.housepub.int.vagrant.base.meminfo.memtotal)' --from=-5min -W 90.0 -C 95.0","interval":60,"standalone":true,"graph":"http://localhost/render?target=lineWidth(color(asPercent(tl.org.housepub.int.vagrant.base.meminfo.memused,tl.org.housepub.int.vagrant.base.meminfo.memtotal),'green'),2)&target=threshold(90,'warn','yellow')&target=threshold(95,'crit','red')&yMin=0&yMax=100&width=1000&height=500"}]}},"level":"warn"}
