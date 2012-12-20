@@ -3,17 +3,16 @@
 Tail logstash tcp outputs
 
 ```
-usage: logstash-tail.py [-h] [-H HOSTS] -p PORT [--filter FILTERS] [--and]
+usage: logstash-tail.py [-h] [-H HOST] -p PORT [--filter FILTER] [--and]
                         [--format FMT]
 
 Tail logstash tcp output
 
 optional arguments:
   -h, --help            show this help message and exit
-  -H HOSTS, --host HOSTS
-                        Logstash host(s) (multiple accepted)
+  -H HOST, --host HOST  Logstash host(s) (multiple accepted)
   -p PORT, --port PORT  Logstash TCP output port
-  --filter FILTERS      Define some filters (multiple accepted; default is to
+  --filter FILTER       Define some filters (multiple accepted; default is to
                         `OR' them
   --and                 AND multiple filters
   --format FMT          Output format (see README for default)

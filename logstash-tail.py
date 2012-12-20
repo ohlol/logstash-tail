@@ -65,9 +65,9 @@ class LogstashClient(object):
 
 
 parser = argparse.ArgumentParser(description="Tail logstash tcp output")
-parser.add_argument("-H", "--host", dest="hosts", default=[], action="append", help="Logstash host(s) (multiple accepted)")
+parser.add_argument("-H", "--host", metavar="HOST", dest="hosts", default=[], action="append", help="Logstash host(s) (multiple accepted)")
 parser.add_argument("-p", "--port", required=True, type=int, help="Logstash TCP output port")
-parser.add_argument("--filter", dest="filters", action="append", help="Define some filters (multiple accepted; default is to `OR' them")
+parser.add_argument("--filter", metavar="FILTER", dest="filters", action="append", help="Define some filters (multiple accepted; default is to `OR' them")
 parser.add_argument("--and", dest="andd", action="store_true", default=False, help="AND multiple filters")
 parser.add_argument("--format", dest="fmt", default="%(@timestamp)s %(@source_host)s: %(@message)s", help="Output format (see README for default)")
 args = parser.parse_args()
