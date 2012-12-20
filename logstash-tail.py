@@ -9,12 +9,22 @@ import sys
 def formatted(fmt, data):
     return fmt % {k: v for k, v in to_path(data)}
 
-def matched(flt, data):
-    fk, kv = flt.split('=', 1)
-    for (path, val) in to_path(data):
-        if fk == path:
-            if re.search(kv, val): return True
-    return False
+def matched(filters, data, andd=False):
+    found = []
+    for flt in filters:
+        fk, kv = flt.split('=', 1)
+        for (path, val) in to_path(data):
+            if fk == path:
+                if re.search(kv, val):
+                    found.append((path, val))
+    if andd:
+        if len(filters) == len(found):
+            return True
+    else:
+        if len(found) > 0:
+            return True
+        else:
+            return False
 
 def stringify(obj):
     if isinstance(obj, str):
@@ -57,11 +67,12 @@ class LogstashClient(object):
 parser = argparse.ArgumentParser(description="Tail logstash tcp output")
 parser.add_argument("-H", "--host", dest="hosts", default=[], action="append", help="Logstash host(s) (multiple accepted)")
 parser.add_argument("-p", "--port", required=True, type=int, help="Logstash TCP output port")
-parser.add_argument("--filter", action="append", help="Define some filters (multiple accepted; OR-ed)")
+parser.add_argument("--filter", dest="filters", action="append", help="Define some filters (multiple accepted; default is to `OR' them")
+parser.add_argument("--and", dest="andd", action="store_true", default=False, help="AND multiple filters")
 parser.add_argument("--format", dest="fmt", default="%(@timestamp)s %(@source_host)s: %(@message)s", help="Output format (see README for default)")
 args = parser.parse_args()
 
-if not args.hosts: args.hosts.append('localhost')
+if not args.hosts: args.hosts.append("localhost")
 cxns = [LogstashClient(host, args.port) for host in args.hosts]
 
 try:
@@ -69,7 +80,7 @@ try:
         for cxn in cxns:
             if cxn.socket:
                 line = ""
-                while not line.endswith('\n'):
+                while not line.endswith("\n"):
                     try:
                         line += cxn.socket.recv(1)
                     except socket.error:
@@ -83,10 +94,9 @@ try:
                     except ValueError:
                         continue
 
-                    if args.filter:
-                        for filter in args.filter:
-                            if matched(filter, parsed):
-                                print formatted(args.fmt, parsed)
+                    if args.filters:
+                        if matched(args.filters, parsed, args.andd):
+                            print formatted(args.fmt, parsed)
                     else:
                         print formatted(args.fmt, parsed)
             else:
