@@ -13,8 +13,14 @@ def matched(flt, data):
     fk, kv = flt.split('=', 1)
     for (path, val) in to_path(data):
         if fk == path:
-            if re.match(kv, val): return True
+            if re.search(kv, val): return True
     return False
+
+def stringify(obj):
+    if isinstance(obj, str):
+        return obj
+    else:
+        return repr(obj)
 
 def to_path(data, prefix=""):
     if isinstance(data, dict):
@@ -26,8 +32,8 @@ def to_path(data, prefix=""):
 
             for line in to_path(v, real_prefix):
                 yield line
-    elif isinstance(data, list) and data:
-        yield (prefix, ",".join(data))
+    elif isinstance(data, list):
+        yield (prefix, ",".join([stringify(x) for x in data]))
     else:
         yield (prefix, str(data))
 
