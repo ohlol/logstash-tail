@@ -3,15 +3,19 @@
 Tail logstash tcp outputs
 
 ```
-usage: logstash-tail.py [-h] [-H HOST] [-p PORT] [--filter FILTER]
+usage: logstash-tail.py [-h] [-H HOSTS] -p PORT [--filter FILTERS] [--and]
+                        [--format FMT]
 
 Tail logstash tcp output
 
 optional arguments:
   -h, --help            show this help message and exit
-  -H HOST, --host HOST  Logstash host [default: localhost]
+  -H HOSTS, --host HOSTS
+                        Logstash host(s) (multiple accepted)
   -p PORT, --port PORT  Logstash TCP output port
-  --filter FILTER       Define some filters (multiple accepted; ORed)
+  --filter FILTERS      Define some filters (multiple accepted; default is to
+                        `OR' them
+  --and                 AND multiple filters
   --format FMT          Output format (see README for default)
 ```
 
@@ -29,6 +33,10 @@ optional arguments:
 2012-12-19T20:43:16.694Z vagrant: {"timestamp":"2012-12-19T20:43:16.276462+0000","message":"cannot connect to rabbitmq","settings":{"host":"localhost","port":5672,"vhost":"/sensu","user":"sensu","password":"password"},"level":"fatal"}
 2012-12-19T20:43:16.695Z vagrant: {"timestamp":"2012-12-19T20:43:16.276702+0000","message":"SENSU NOT RUNNING!","level":"fatal"}
 ```
+
+If you want to tail several logstash instances, simply add more `-H/--host` arguments. They must all be listening on the same port, though.
+
+You can also specify multiple filters. By default they will be OR'ed, but if you specify `--and`, a message will only be printed if all filters match.
 
 ## Setup
 
