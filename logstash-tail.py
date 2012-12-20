@@ -6,16 +6,6 @@ import re
 import socket
 import sys
 
-
-def connect(host, port):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    try:
-        s.connect((host, port))
-        return s
-    except socket.error:
-        return None
-
 def formatted(fmt, data):
     return fmt % {k: v for k, v in to_path(data)}
 
@@ -42,38 +32,59 @@ def to_path(data, prefix=""):
         yield (prefix, str(data))
 
 
+class LogstashClient(object):
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+
+        self.socket = self.connect()
+
+    def connect(self):
+        try:
+            sock = socket.socket()
+            sock.connect((self.host, self.port))
+            return sock
+        except socket.error:
+            return None
+
+
 parser = argparse.ArgumentParser(description="Tail logstash tcp output")
-parser.add_argument("-H", "--host", default="localhost", help="Logstash host [default: %(default)s]")
-parser.add_argument("-p", "--port", type=int, help="Logstash TCP output port")
+parser.add_argument("-H", "--host", dest="hosts", default=[], action="append", help="Logstash host(s) (multiple accepted)")
+parser.add_argument("-p", "--port", required=True, type=int, help="Logstash TCP output port")
 parser.add_argument("--filter", action="append", help="Define some filters (multiple accepted; OR-ed)")
 parser.add_argument("--format", dest="fmt", default="%(@timestamp)s %(@source_host)s: %(@message)s", help="Output format (see README for default)")
 args = parser.parse_args()
 
-sock = connect(args.host, args.port)
+if not args.hosts: args.hosts.append('localhost')
+cxns = [LogstashClient(host, args.port) for host in args.hosts]
 
-if sock:
+try:
     while True:
-        try:
-            line = ""
-            while not line.endswith('\n'):
-                line += sock.recv(1)
-                try:
-                    parsed = json.loads(line)
-                except ValueError:
-                    continue
+        for cxn in cxns:
+            if cxn.socket:
+                line = ""
+                while not line.endswith('\n'):
+                    try:
+                        line += cxn.socket.recv(1)
+                    except socket.error:
+                        cxns.remove(cxn)
+                        cxns.append(LogstashClient(cxn.host, cxn.port))
+                        break
 
-            if args.filter:
-                for filter in args.filter:
-                    if matched(filter, parsed):
+                if line:
+                    try:
+                        parsed = json.loads(line)
+                    except ValueError:
+                        continue
+
+                    if args.filter:
+                        for filter in args.filter:
+                            if matched(filter, parsed):
+                                print formatted(args.fmt, parsed)
+                    else:
                         print formatted(args.fmt, parsed)
             else:
-                print formatted(args.fmt, parsed)
-        except KeyboardInterrupt:
-            print "Disconnecting..."
-            sys.exit(0)
-        except socket.error:
-            print "Trying to reconnect..."
-            sock = connect(args.host, args.port)
-else:
-    print "ERROR: could not connect to '%s' on '%d'" % (args.host, args.port)
+                cxns.remove(cxn)
+except KeyboardInterrupt:
+    print "\nDisconnecting..."
     sys.exit(2)
