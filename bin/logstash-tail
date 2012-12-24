@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+G#!/usr/bin/env python
 
 import argparse
 import json
@@ -138,4 +138,4 @@ try:
                         print args.fmt % {k: v for k, v in to_path(parsed)}
 except KeyboardInterrupt:
     logging.warning("Disconnecting...")
-    sys.exit(2)
+    sys.exit(0)
