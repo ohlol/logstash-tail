@@ -10,30 +10,41 @@ import sys
 
 from colorama import Fore, Style
 
+
+def hilite(regex, msg):
+    print regex, msg
+    return re.sub(r'(%s)' % regex, Style.BRIGHT +
+                  Fore.GREEN +
+                  r'\1' +
+                  Fore.RESET +
+                  Style.RESET_ALL, msg)
+
+
 def matched(filters, data, andd, colored):
-    highlighted = {k: v for k, v in to_path(data)}
+    fields = {k: v for k, v in to_path(data)}
     found = 0
     for flt in filters:
         fk, kv = flt.split('=', 1)
-        for path, val in highlighted.iteritems():
-            if fk == path and re.search(kv, val):
-                found += 1
-                if colored:
-                    highlighted[path] = re.sub(r'(%s)' % kv, Style.BRIGHT + Fore.GREEN + r'\1' + Fore.RESET + Style.RESET_ALL, val)
+        for path in filter(lambda x: fk == x and re.search(kv, fields[x]), fields.keys()):
+            found += 1
+            if colored:
+                fields[path] = hilite(kv, fields[path])
     if andd:
         if len(filters) == found:
-            return highlighted
+            return fields
     else:
         if found > 0:
-            return highlighted
+            return fields
         else:
             return None
+
 
 def stringify(obj):
     if isinstance(obj, str):
         return obj
     else:
         return repr(obj)
+
 
 def to_path(data, prefix=""):
     if isinstance(data, dict):
@@ -65,15 +76,39 @@ def connect(host, port):
 logging.basicConfig(format="%(message)s")
 
 parser = argparse.ArgumentParser(description="Tail logstash tcp output")
-parser.add_argument("-H", "--host", metavar="HOST", dest="hosts", default=[], action="append", help="Logstash host(s) (multiple accepted)")
-parser.add_argument("-p", "--port", required=True, type=int, help="Logstash TCP output port")
-parser.add_argument("--and", dest="andd", action="store_true", default=False, help="AND multiple filters")
-parser.add_argument("--color", action="store_true", default=False, help="Color highlight filtered output [default: %(default)s]")
-parser.add_argument("--filter", metavar="FILTER", dest="filters", action="append", help="Define some filters (multiple accepted; default is to `OR' them")
-parser.add_argument("--format", dest="fmt", default="%(@timestamp)s %(@source_host)s: %(@message)s", help="Output format (see README for default)")
+parser.add_argument("-H", "--host",
+                    metavar="HOST",
+                    dest="hosts",
+                    default=[],
+                    action="append",
+                    help="Logstash host(s) (multiple accepted)")
+parser.add_argument("-p", "--port",
+                    required=True,
+                    type=int,
+                    help="Logstash TCP output port")
+parser.add_argument("--and",
+                    dest="andd",
+                    action="store_true",
+                    default=False,
+                    help="AND multiple filters")
+parser.add_argument("--color",
+                    action="store_true",
+                    default=False,
+                    help="Color highlight filtered output [default: %(default)s]")
+parser.add_argument("--filter",
+                    metavar="FILTER",
+                    dest="filters",
+                    action="append",
+                    help="Define some filters (multiple accepted; default is to `OR' them")
+parser.add_argument("--format",
+                    dest="fmt",
+                    default="%(@timestamp)s %(@source_host)s: %(@message)s",
+                    help="Output format (see README for default)")
 args = parser.parse_args()
 
-if not args.hosts: args.hosts.append("localhost")
+if not args.hosts:
+    args.hosts.append("localhost")
+
 clients = filter(None, [connect(host, args.port) for host in args.hosts])
 
 try:
@@ -95,7 +130,8 @@ try:
                         continue
 
                     if args.filters:
-                        highlighted = matched(args.filters, parsed, args.andd, args.color)
+                        highlighted = matched(args.filters, parsed, args.andd,
+                                              args.color)
                         if highlighted:
                             print args.fmt % highlighted
                     else:
