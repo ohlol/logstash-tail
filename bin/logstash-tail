@@ -4,6 +4,7 @@ import argparse
 import json
 import logging
 import re
+import select
 import socket
 import sys
 
@@ -50,21 +51,15 @@ def to_path(data, prefix=""):
         yield (prefix, str(data))
 
 
-class LogstashClient(object):
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
-
-        self.socket = self.connect()
-
-    def connect(self):
-        logging.warning("Connecting to %s:%d" % (self.host, self.port))
-        try:
-            sock = socket.socket()
-            sock.connect((self.host, self.port))
-            return sock
-        except socket.error:
-            return None
+def connect(host, port):
+    logging.warning("Connecting to %s:%d" % (host, port))
+    try:
+        sock = socket.socket()
+        sock.connect((host, port))
+        return sock
+    except socket.error:
+        logging.error("ERROR: Could not connect to %s:%d" % (host, port))
+        return None
 
 
 logging.basicConfig(format="%(message)s")
@@ -79,21 +74,19 @@ parser.add_argument("--format", dest="fmt", default="%(@timestamp)s %(@source_ho
 args = parser.parse_args()
 
 if not args.hosts: args.hosts.append("localhost")
-cxns = [LogstashClient(host, args.port) for host in args.hosts]
+clients = filter(None, [connect(host, args.port) for host in args.hosts])
 
 try:
-    while True:
-        for cxn in cxns:
-            if cxn.socket:
-                line = ""
-                while not line.endswith("\n"):
-                    try:
-                        line += cxn.socket.recv(1)
-                    except socket.error:
-                        logging.warning("Lost connection to %s:%d, trying again." % (cxn.host, cxn.port))
-                        cxns.remove(cxn)
-                        cxns.append(LogstashClient(cxn.host, cxn.port))
-                        break
+    while clients:
+        [readable, trash1, trash2] = select.select(clients, [], [], 30)
+        for cxn in readable:
+            line = ""
+            while not line.endswith("\n"):
+                try:
+                    line += cxn.recv(1)
+                except socket.error:
+                    clients.remove(cxn)
+                    break
 
                 if line:
                     try:
@@ -107,9 +100,6 @@ try:
                             print args.fmt % highlighted
                     else:
                         print args.fmt % {k: v for k, v in to_path(parsed)}
-            else:
-                logging.warning("No socket for %s:%d, ignoring." % (cxn.host, cxn.debug))
-                cxns.remove(cxn)
 except KeyboardInterrupt:
     logging.warning("Disconnecting...")
     sys.exit(2)
