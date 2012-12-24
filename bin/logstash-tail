@@ -25,7 +25,7 @@ def matched(filters, data, andd, colored):
     found = 0
     for flt in filters:
         fk, kv = flt.split('=', 1)
-        for path in filter(lambda x: fk == x and re.search(kv, fields[x]), fields.keys()):
+        for path in filter(lambda x: fk == x and re.search(kv, fields[x]), fields):
             found += 1
             if colored:
                 fields[path] = hilite(kv, fields[path])
