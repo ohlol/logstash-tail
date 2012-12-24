@@ -12,7 +12,6 @@ from colorama import Fore, Style
 
 
 def hilite(regex, msg):
-    print regex, msg
     return re.sub(r'(%s)' % regex, Style.BRIGHT +
                   Fore.GREEN +
                   r'\1' +
