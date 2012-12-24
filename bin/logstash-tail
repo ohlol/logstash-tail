@@ -19,8 +19,7 @@ def hilite(regex, msg):
                   Style.RESET_ALL, msg)
 
 
-def matched(filters, data, andd, colored):
-    fields = {k: v for k, v in to_path(data)}
+def matched(filters, fields, andd, colored):
     found = 0
     for flt in filters:
         fk, kv = flt.split('=', 1)
@@ -128,13 +127,15 @@ try:
                     except ValueError:
                         continue
 
+                    fields = dict(to_path(parsed))
+
                     if args.filters:
-                        highlighted = matched(args.filters, parsed, args.andd,
+                        highlighted = matched(args.filters, fields, args.andd,
                                               args.color)
                         if highlighted:
                             print args.fmt % highlighted
                     else:
-                        print args.fmt % {k: v for k, v in to_path(parsed)}
+                        print args.fmt % fields
 except KeyboardInterrupt:
     logging.warning("Disconnecting...")
     sys.exit(0)
