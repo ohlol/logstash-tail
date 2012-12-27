@@ -19,6 +19,17 @@ optional arguments:
   --format FMT          Output format (see README for default)
 ```
 
+## Installation
+
+`$ pip install logstash-tail`
+
+or, install from the cloned repo:
+
+```
+$ git clone git://github.com/ohlol/logstash-tail.git
+$ python setup.py install
+```
+
 ## An example
 
 ```
