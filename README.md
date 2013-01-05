@@ -65,10 +65,6 @@ output {
 }
 ```
 
-## Install
-
-% sudo python setup.py install
-
 ## Output formatting
 
 You can specify the output format using --format. Internally, this just uses Python's string formatting. Nested fields and attributes of the Logstash JSON are converted to dot-delimited strings (as seen in the example above with @fields.program).
